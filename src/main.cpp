@@ -1,3 +1,4 @@
+
 #include <SFML/Graphics.hpp>
 #include <fstream>
 #include <string>
@@ -82,6 +83,17 @@ int main() {
         {
             if (event->is<sf::Event::Closed>())
                 window.close();
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+                paddleX = paddleX - 8;
+				paddle.setPosition({ (float)paddleX, 650.f });
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+                paddleX = paddleX + 8;
+                paddle.setPosition({ (float)paddleX, 650.f });
+            }
+               
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
