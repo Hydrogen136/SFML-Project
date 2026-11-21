@@ -35,11 +35,14 @@ void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& veloci
 
 
 void scoresave(int playerscr) {
-    int score;
+    int score = 0;
 	ifstream scorefile("scores/scores.txt");
 	scorefile >> score;
+	cout << "Current high score: " << score << endl;
+	scorefile.close();
     if (score<playerscr)
     {
+		cout << "New high score: " << playerscr << endl;
         ofstream output("scores/scores.txt");
         if (!output.is_open()) {
             cout << "Failed to open scores file" << endl;
@@ -50,18 +53,14 @@ void scoresave(int playerscr) {
     }
 
 }
-int main() {
-    int scoretxt = 0;
-    int lives = 3;
-    int option = 0;
-    int r, c;
-    vector<vector<int>> bricks;
+bool levelload(int lvl,int &r, int &c, vector<vector<int>>& bricks) {
 
-    ifstream bricksdata("Levels/level5.txt");
+	string levelFile = "Levels/level" + to_string(lvl) + ".txt";
+    ifstream bricksdata(levelFile);
 
     if (!bricksdata.is_open()) {
         cout << "Failed to load bricks data" << endl;
-        return -1;
+        return false;
     }
 
     bricksdata >> r >> c;
@@ -75,7 +74,22 @@ int main() {
             bricksdata >> bricks[rows][cols];
         }
     }
+	return true;
+}
+struct LevelBtn {
+    RectangleShape shape;
+    Texture texture;
+    string levelPath;
+};
+int main() {
 
+    int r=0, c=0;
+    vector<vector<int>> bricks;
+    int scoretxt = 0;
+    int lives = 3;
+    int option = 0;
+    int level = 1;
+	levelload(level, r, c, bricks);
     float paddleX = 250.f, ballX = 300.f, ballY = 400.f;
     RectangleShape paddle({ 100.f, 14.f });
     CircleShape ball(6.f);
@@ -141,7 +155,7 @@ int main() {
     menuSound.setLooping(true);
 
     float speed = 5.0f;
-    Vector2f velocity(0.0f, speed);
+    Vector2f velocity(0.0f, 0.0f);
     //score and lives text
     Font font;
     if (!font.openFromFile("C:\\Windows\\Fonts\\arial.ttf"))
@@ -185,13 +199,24 @@ int main() {
     play.setTexture(&playbtn);
     scores.setPosition({ 200.f, 400.f });
     scores.setTexture(&scorebtn);
-    //levels.setFillColor(Color::Green);
     levels.setPosition({ 200.f, 500.f });
     levels.setTexture(&levelbtn);
     exit.setPosition({ 200.f, 600.f });
     exit.setTexture(&exitbtn);
 
+    LevelBtn lvlBtns[5];
 
+    for (int i = 0; i < 5; i++) {
+        if (!lvlBtns[i].texture.loadFromFile("images/level" + to_string(i + 1) + ".jpg")) {
+            cout << "Failed to load level " << i + 1 << " button texture" << endl;
+            return -1;
+        }
+
+        lvlBtns[i].shape.setSize({ 200.f, 50.f });
+        lvlBtns[i].shape.setPosition({ 200.f, 150.f + i * 90.f });
+        lvlBtns[i].shape.setTexture(&lvlBtns[i].texture);
+        lvlBtns[i].levelPath = "Levels/level" + to_string(i + 1) + ".txt";
+    }
 
 
 
@@ -242,10 +267,27 @@ int main() {
                     {
                         option = 1;
                     }
-                    if (option == 0 && scores.getGlobalBounds().contains(mousePos))
+                    else if (option == 0 && scores.getGlobalBounds().contains(mousePos))
                     {
-                        cout << "Scores button clicked!" << endl;
                         option = 2;
+                    }
+                    else if (option == 0 && levels.getGlobalBounds().contains(mousePos))
+                    {
+                        option = 3; // Open levels screen
+                    }
+                    else if (option == 3)
+                    {
+                        for (int i = 0; i < 5; i++)
+                        {
+                            if (lvlBtns[i].shape.getGlobalBounds().contains(mousePos))
+                            {
+                                if (levelload(i+1, r, c, bricks))
+                                {
+									cout << "level " << i + 1 << " loaded successfully." << endl;
+									option = 0;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -253,11 +295,21 @@ int main() {
                 sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
                 paddleX = paddleX - 8;
                 paddle.setPosition({ (float)paddleX, 650.f });
+                if  (!(velocity.x && velocity.y))
+                {
+                    velocity = { 0.f, speed };
+                }
+				
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
                 paddleX = paddleX + 8;
                 paddle.setPosition({ (float)paddleX, 650.f });
+                if (!(velocity.x && velocity.y))
+                {
+                    velocity = { 0.f, speed };
+                }
+				
             }
 
         }
@@ -282,6 +334,7 @@ int main() {
         }
         
         case 1: {
+			window.draw(background);
             menuSound.stop();
 
             for (int rows = 0; rows < r; rows++)
@@ -351,6 +404,8 @@ int main() {
                     lives--;
 					livesText.setString("Lives: " + to_string(lives));
                     ball.setPosition({ 300.f, 400.f });
+					velocity = { 0.f, 0.f };
+					paddle.setPosition({ 250.f, 650.f });
                 }
                 else
                 {
@@ -381,6 +436,41 @@ int main() {
             window.draw(livesText);
             break;
         }
+		case 2:
+		{
+            int score = 0;
+            ifstream scoresFile("scores/scores.txt");
+            if (scoresFile.is_open()) {
+                scoresFile >> score;
+                scoresFile.close();
+            }
+
+            window.draw(background);
+
+            Text scoresTitle(font, "Highest score: ", 36);
+            scoresTitle.setPosition({ 80.f, 150.f });
+
+            Text plyrscr(font, to_string(score), 36);
+            plyrscr.setPosition({ 360.f, 150.f });
+
+            window.draw(scoresTitle);
+            window.draw(plyrscr);
+            break;
+		}
+		case 3:
+		{
+            window.draw(background);
+            for (int i = 0; i < 5; i++)
+            {
+                window.draw(lvlBtns[i].shape);
+            }
+			if(!levelload(level, r, c, bricks))
+			{
+				cout << "Failed to load level " << level << "." << endl;
+			}
+            
+            break;
+		}
         default:
         {
             break;
