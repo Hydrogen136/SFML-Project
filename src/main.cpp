@@ -293,6 +293,18 @@ int main() {
             window.draw(livesText);
             break;
         }
+		case 2:
+		{
+		
+			window.draw(background);
+			Text scoresTitle(font, "Scores", 36);
+			scoresTitle.setPosition({ 250.f, 50.f });
+			window.draw(scoresTitle);
+			ifstream scoresFile("scores/scores.txt");
+			scoresFile>>scoretxt;
+			scoresFile.close();
+			break;
+		}
         default:
         {
             break;
