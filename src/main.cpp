@@ -33,7 +33,22 @@ void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& veloci
 }
 
 
+void scoresave(int playerscr) {
+    int score;
+	ifstream scorefile("scores/scores.txt");
+	scorefile >> score;
+    if (score<playerscr)
+    {
+        ofstream output("scores/scores.txt");
+        if (!output.is_open()) {
+            cout << "Failed to open scores file" << endl;
+            return;
+        }
+        output << playerscr << endl;
+        output.close();
+    }
 
+}
 int main() {
     int scoretxt = 0;
     int lives = 3;
@@ -278,7 +293,10 @@ int main() {
                 }
                 else
                 {
-					window.close();
+					scoresave(scoretxt);
+					option = 0;
+					scoretxt = 0;
+					lives = 3;
                 }
             }
 
