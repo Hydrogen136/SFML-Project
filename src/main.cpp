@@ -1,5 +1,6 @@
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -94,6 +95,50 @@ int main() {
 
     RenderWindow window(VideoMode({ 600, 700 }), "Block buster");
     window.setFramerateLimit(60);
+    // for brick sound
+    SoundBuffer brickBuffer;
+
+    if (!brickBuffer.loadFromFile("Sounds/brick.wav"))
+    {
+        cout << "Brick sound failed to load!" << endl;
+    }
+
+    Sound brickSound(brickBuffer);
+
+    // for game over sound
+    SoundBuffer gameOverBuffer;
+
+    if (!gameOverBuffer.loadFromFile("Sounds/game over.mp3"))
+    {
+        cout << "Game Over sound failed to load!" << endl;
+    }
+
+    Sound gameOverSound(gameOverBuffer);
+
+	// for paddle sound
+    SoundBuffer paddleBuffer;
+    if (!paddleBuffer.loadFromFile("Sounds/paddle.wav"))
+    {
+        cout << "Paddle sound failed to load!" << endl;
+    }
+    Sound paddleSound(paddleBuffer);
+	
+    // for life lost sound
+    SoundBuffer lifeLostBuffer;
+    if (!lifeLostBuffer.loadFromFile("Sounds/life lost.mp3"))
+    {
+        cout << "Life lost sound failed to load!" << endl;
+    }
+    Sound lifeLostSound(lifeLostBuffer);
+    
+    // for main menu music
+    SoundBuffer menuBuffer;
+    if (!menuBuffer.loadFromFile("Sounds/Main menu.mp3"))
+    {
+        cout << "Main menu sound failed to load!" << endl;
+    }
+    Sound menuSound(menuBuffer);
+    menuSound.setLooping(true);
 
     float speed = 5.0f;
     Vector2f velocity(0.0f, speed);
@@ -221,6 +266,13 @@ int main() {
         switch (option) {
         case 0:
         {
+        
+        
+            if (menuSound.getStatus() != Sound::Status::Playing)
+            {
+                menuSound.play();
+            }
+
             window.draw(background);
             window.draw(levels);
             window.draw(exit);
@@ -228,7 +280,9 @@ int main() {
             window.draw(play);
             break;
         }
+        
         case 1: {
+            menuSound.stop();
 
             for (int rows = 0; rows < r; rows++)
             {
@@ -248,6 +302,10 @@ int main() {
                         {
                             bricks[rows][cols]--;
 							scoreText.setString("Score: " + to_string(scoretxt += 10));
+                            if (brickSound.getStatus() != Sound::Status::Playing)
+                            {
+                                brickSound.play();
+                            }
                             directcalc(brickBounds, ballBounds, velocity, speed, 1); // brick = 1
                         }
 
@@ -285,23 +343,35 @@ int main() {
                 velocity.y = abs(velocity.y);
             if (ballBounds.position.y >= 700.f)
             {
-                if (lives>0)
+                if (lives>1)
                 {
+                    lifeLostSound.stop();
+                    lifeLostSound.play();
+
                     lives--;
 					livesText.setString("Lives: " + to_string(lives));
                     ball.setPosition({ 300.f, 400.f });
                 }
                 else
                 {
-					scoresave(scoretxt);
-					option = 0;
-					scoretxt = 0;
-					lives = 3;
+            
+            
+                gameOverSound.play();
+
+                scoresave(scoretxt);
+                option = 0;
+                scoretxt = 0;
+                lives = 3;
+            
                 }
             }
 
             if (paddleBounds.findIntersection(ballBounds))
             {
+                if (paddleSound.getStatus() != Sound::Status::Playing)
+                {
+                    paddleSound.play();
+                }
                 directcalc(paddleBounds, ballBounds, velocity, speed);
             }
 
