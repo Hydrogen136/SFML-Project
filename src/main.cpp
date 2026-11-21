@@ -34,11 +34,14 @@ void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& veloci
 
 
 void scoresave(int playerscr) {
-    int score;
+    int score = 0;
 	ifstream scorefile("scores/scores.txt");
 	scorefile >> score;
+	cout << "Current high score: " << score << endl;
+	scorefile.close();
     if (score<playerscr)
     {
+		cout << "New high score: " << playerscr << endl;
         ofstream output("scores/scores.txt");
         if (!output.is_open()) {
             cout << "Failed to open scores file" << endl;
@@ -96,7 +99,7 @@ int main() {
     window.setFramerateLimit(60);
 
     float speed = 5.0f;
-    Vector2f velocity(0.0f, speed);
+    Vector2f velocity(0.0f, 0.0f);
     //score and lives text
     Font font;
     if (!font.openFromFile("C:\\Windows\\Fonts\\arial.ttf"))
@@ -140,7 +143,7 @@ int main() {
     play.setTexture(&playbtn);
     scores.setPosition({ 200.f, 400.f });
     scores.setTexture(&scorebtn);
-    //levels.setFillColor(Color::Green);
+ 
     levels.setPosition({ 200.f, 500.f });
     levels.setTexture(&levelbtn);
     exit.setPosition({ 200.f, 600.f });
@@ -199,7 +202,6 @@ int main() {
                     }
                     if (option == 0 && scores.getGlobalBounds().contains(mousePos))
                     {
-                        cout << "Scores button clicked!" << endl;
                         option = 2;
                     }
                 }
@@ -208,11 +210,21 @@ int main() {
                 sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
                 paddleX = paddleX - 8;
                 paddle.setPosition({ (float)paddleX, 650.f });
+                if  (!(velocity.x && velocity.y))
+                {
+                    velocity = { 0.f, speed };
+                }
+				
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
                 paddleX = paddleX + 8;
                 paddle.setPosition({ (float)paddleX, 650.f });
+                if (!(velocity.x && velocity.y))
+                {
+                    velocity = { 0.f, speed };
+                }
+				
             }
 
         }
@@ -229,6 +241,7 @@ int main() {
             break;
         }
         case 1: {
+			window.draw(background);
 
             for (int rows = 0; rows < r; rows++)
             {
@@ -290,6 +303,8 @@ int main() {
                     lives--;
 					livesText.setString("Lives: " + to_string(lives));
                     ball.setPosition({ 300.f, 400.f });
+					velocity = { 0.f, 0.f };
+					paddle.setPosition({ 250.f, 650.f });
                 }
                 else
                 {
@@ -313,15 +328,24 @@ int main() {
         }
 		case 2:
 		{
-		
-			window.draw(background);
-			Text scoresTitle(font, "Scores", 36);
-			scoresTitle.setPosition({ 250.f, 50.f });
-			window.draw(scoresTitle);
-			ifstream scoresFile("scores/scores.txt");
-			scoresFile>>scoretxt;
-			scoresFile.close();
-			break;
+            int score = 0;
+            ifstream scoresFile("scores/scores.txt");
+            if (scoresFile.is_open()) {
+                scoresFile >> score;
+                scoresFile.close();
+            }
+
+            window.draw(background);
+
+            Text scoresTitle(font, "Highest score: ", 36);
+            scoresTitle.setPosition({ 80.f, 150.f });
+
+            Text plyrscr(font, to_string(score), 36);
+            plyrscr.setPosition({ 360.f, 150.f });
+
+            window.draw(scoresTitle);
+            window.draw(plyrscr);
+            break;
 		}
         default:
         {
