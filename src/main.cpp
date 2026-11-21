@@ -27,7 +27,7 @@ void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& veloci
     }
     else
     {
-        
+
         velocity.y = -speed * cos(angle);
     }
 }
@@ -69,7 +69,7 @@ int main() {
         Color::Yellow,     // 2: two hits left
         Color::Red         // 3: three hits left
     };
-    
+
     RectangleShape brick({ BRICK_W - 2, BRICK_H - 2 });
 
     RenderWindow window(VideoMode({ 600, 700 }), "Block buster");
@@ -77,7 +77,82 @@ int main() {
 
     float speed = 5.0f;
     Vector2f velocity(0.0f, speed);
+    // Game Menu 
+    Texture playbtn, levelbtn, scorebtn, exitbtn, bgTexture;
+    if (!playbtn.loadFromFile("images/play.jpg")) {
+        cout << "Failed to load play button texture" << endl;
+        return -1;
+    }
+    if (!levelbtn.loadFromFile("images/levels.jpg")) {
+        cout << "Failed to load level button texture" << endl;
+        return -1;
+    }
+    if (!scorebtn.loadFromFile("images/scores.jpg")) {
+        cout << "Failed to load scores button texture" << endl;
+        return -1;
+    }
+    if (!exitbtn.loadFromFile("images/exit.jpg")) {
+        cout << "Failed to load exit button texture" << endl;
+        return -1;
+    }
+    if (!bgTexture.loadFromFile("images/bg.jpg")) {
+        cout << "Failed to load background texture" << endl;
+        return -1;
+    }
+    bgTexture.generateMipmap();
+    bgTexture.setSmooth(true);
 
+    RectangleShape background({ 600.f, 700.f });
+    background.setPosition({ 0.f, 0.f });
+    background.setTexture(&bgTexture);
+    RectangleShape play({ 200.f, 50.f }), scores({ 200.f, 50.f }), levels({ 200.f, 50.f }), exit({ 200.f, 50.f });
+    play.setPosition({ 200.f, 300.f });
+    play.setTexture(&playbtn);
+    scores.setPosition({ 200.f, 400.f });
+    scores.setTexture(&scorebtn);
+    //levels.setFillColor(Color::Green);
+    levels.setPosition({ 200.f, 500.f });
+    levels.setTexture(&levelbtn);
+    exit.setPosition({ 200.f, 600.f });
+    exit.setTexture(&exitbtn);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Main game loop
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent())
         {
@@ -94,7 +169,7 @@ int main() {
                     }
                     if (option == 0 && scores.getGlobalBounds().contains(mousePos))
                     {
-						cout << "Scores button clicked!" << endl;
+                        cout << "Scores button clicked!" << endl;
                         option = 2;
                     }
                 }
@@ -102,29 +177,29 @@ int main() {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
                 paddleX = paddleX - 8;
-				paddle.setPosition({ (float)paddleX, 650.f });
+                paddle.setPosition({ (float)paddleX, 650.f });
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
                 paddleX = paddleX + 8;
                 paddle.setPosition({ (float)paddleX, 650.f });
             }
-               
+
         }
 
         window.clear();
         switch (option) {
         case 0:
         {
-			window.draw(background);
-			window.draw(levels);
-			window.draw(exit);
-			window.draw(scores);
+            window.draw(background);
+            window.draw(levels);
+            window.draw(exit);
+            window.draw(scores);
             window.draw(play);
             break;
         }
-        case 1:{
-         
+        case 1: {
+
             for (int rows = 0; rows < r; rows++)
             {
                 for (int cols = 0; cols < c; cols++)
