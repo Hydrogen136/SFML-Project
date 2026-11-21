@@ -168,7 +168,7 @@ int main() {
     Text livesText(font, "Lives: 3", 24);
     livesText.setPosition({ 10.f, 40.f });
     // Game Menu 
-    Texture playbtn, levelbtn, scorebtn, exitbtn, bgTexture;
+    Texture playbtn, levelbtn, scorebtn, exitbtn, bgTexture, logoTexture;
     if (!playbtn.loadFromFile("images/play.jpg")) {
         cout << "Failed to load play button texture" << endl;
         return -1;
@@ -189,7 +189,16 @@ int main() {
         cout << "Failed to load background texture" << endl;
         return -1;
     }
+    if (!logoTexture.loadFromFile("images/logo.png"))
+    {
+        cout << "Failed to load logo" << endl;
+        return -1;
+    }
+    
+    Sprite logo(logoTexture);
 
+    logo.setScale({ 0.30f, 0.30f });
+    logo.setPosition({ 70.f, 30.f });
 
     RectangleShape background({ 600.f, 700.f });
     background.setPosition({ 0.f, 0.f });
@@ -265,7 +274,30 @@ int main() {
                     Vector2f mousePos = window.mapPixelToCoords(mousePressed->position);
                     if (option == 0 && play.getGlobalBounds().contains(mousePos))
                     {
-                        option = 1;
+                        
+                        
+                            // Reset score
+                            scoretxt = 0;
+                            scoreText.setString("Score: 0");
+
+                            // Reset lives
+                            lives = 3;
+                            livesText.setString("Lives: 3");
+
+                            // Reset ball
+                            ball.setPosition({ 300.f, 400.f });
+                            velocity = { 0.f, speed };
+
+                            // Reset paddle
+                            paddleX = 250.f;
+                            paddle.setPosition({ paddleX, 650.f });
+
+                            // Reload the selected level
+                            levelload(level, r, c, bricks);
+
+                            option = 1;
+                        
+                        
                     }
                     else if (option == 0 && scores.getGlobalBounds().contains(mousePos))
                     {
@@ -275,16 +307,21 @@ int main() {
                     {
                         option = 3; // Open levels screen
                     }
+                    else if (option == 0 && levels.getGlobalBounds().contains(mousePos))
+                    {
+                        option = 4; // Open levels screen
+                    }
                     else if (option == 3)
                     {
                         for (int i = 0; i < 5; i++)
                         {
                             if (lvlBtns[i].shape.getGlobalBounds().contains(mousePos))
                             {
-                                if (levelload(i+1, r, c, bricks))
+                                if (levelload(i + 1, r, c, bricks))
                                 {
-									cout << "level " << i + 1 << " loaded successfully." << endl;
-									option = 0;
+                                    level = i + 1;
+                                    cout << "level " << level << " loaded successfully." << endl;
+                                    option = 0;
                                 }
                             }
                         }
@@ -326,6 +363,7 @@ int main() {
             }
 
             window.draw(background);
+            window.draw(logo);
             window.draw(levels);
             window.draw(exit);
             window.draw(scores);
@@ -405,18 +443,17 @@ int main() {
 					livesText.setString("Lives: " + to_string(lives));
                     ball.setPosition({ 300.f, 400.f });
 					velocity = { 0.f, 0.f };
-					paddle.setPosition({ 250.f, 650.f });
+                    paddleX = 250.f;
+					paddle.setPosition({ paddleX, 650.f });
                 }
                 else
                 {
-            
-            
                 gameOverSound.play();
-
                 scoresave(scoretxt);
                 option = 0;
                 scoretxt = 0;
                 lives = 3;
+                levelload(level, r, c, bricks);
             
                 }
             }
@@ -470,6 +507,11 @@ int main() {
 			}
             
             break;
+		}
+        case 4:
+		{
+			window.close();
+			break;
 		}
         default:
         {
