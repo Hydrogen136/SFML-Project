@@ -77,7 +77,8 @@ int main() {
 
     float speed = 5.0f;
     Vector2f velocity(0.0f, speed);
-
+    // Menu creation 
+    RectangleShape play({ 10.f,5.f });
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent())
         {
