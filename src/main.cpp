@@ -69,7 +69,7 @@ int main() {
         Color::Yellow,     // 2: two hits left
         Color::Red         // 3: three hits left
     };
-
+    
     RectangleShape brick({ BRICK_W - 2, BRICK_H - 2 });
 
     RenderWindow window(VideoMode({ 600, 700 }), "My Game");
