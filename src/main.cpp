@@ -31,8 +31,56 @@ void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& veloci
         velocity.y = -speed * cos(angle);
     }
 }
+void saveGame(int score, int lives, vector<vector<int>>& bricks)
+{
+    ofstream file("savegame.txt");   // overwrites the old save
+
+    if (file.is_open())
+    {
+        file << score << endl;
+        file << lives << endl;
+        file << bricks.size() << " " << bricks[0].size() << endl;
+
+        for (int i = 0; i < bricks.size(); i++)
+        {
+            for (int j = 0; j < bricks[i].size(); j++)
+            {
+                file << bricks[i][j] << " ";
+            }
+            file << endl;
+        }
+        file.close();
+    }
+}
+
+bool loadGame(int& score, int& lives, vector<vector<int>>& bricks)
+{
+    ifstream file("savegame.txt");
+
+    if (!file.is_open())
+        return false;
+
+    int rows, cols;
+    file >> score >> lives >> rows >> cols;
+
+    bricks.assign(rows, vector<int>(cols));
+
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            file >> bricks[i][j];
+        }
+    }
+    file.close();
+    return true;
+}
+
 
 int main() {
+    int scores = 0;
+    int lives = 3;
+    int option = 0;
     int r, c;
     vector<vector<int>> bricks;
 
@@ -77,7 +125,8 @@ int main() {
 
     float speed = 5.0f;
     Vector2f velocity(0.0f, speed);
-
+    // Menu creation 
+    RectangleShape play({ 10.f,5.f });
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent())
         {
