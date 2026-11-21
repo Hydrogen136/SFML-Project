@@ -31,54 +31,11 @@ void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& veloci
         velocity.y = -speed * cos(angle);
     }
 }
-void saveGame(int score, int lives, vector<vector<int>>& bricks)
-{
-    ofstream file("savegame.txt");   // overwrites the old save
 
-    if (file.is_open())
-    {
-        file << score << endl;
-        file << lives << endl;
-        file << bricks.size() << " " << bricks[0].size() << endl;
-
-        for (int i = 0; i < bricks.size(); i++)
-        {
-            for (int j = 0; j < bricks[i].size(); j++)
-            {
-                file << bricks[i][j] << " ";
-            }
-            file << endl;
-        }
-        file.close();
-    }
-}
-
-bool loadGame(int& score, int& lives, vector<vector<int>>& bricks)
-{
-    ifstream file("savegame.txt");
-
-    if (!file.is_open())
-        return false;
-
-    int rows, cols;
-    file >> score >> lives >> rows >> cols;
-
-    bricks.assign(rows, vector<int>(cols));
-
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < cols; j++)
-        {
-            file >> bricks[i][j];
-        }
-    }
-    file.close();
-    return true;
-}
 
 
 int main() {
-    int scores = 0;
+    int scoretxt = 0;
     int lives = 3;
     int option = 0;
     int r, c;
@@ -125,6 +82,17 @@ int main() {
 
     float speed = 5.0f;
     Vector2f velocity(0.0f, speed);
+    //score and lives text
+    Font font;
+    if (!font.openFromFile("C:\\Windows\\Fonts\\arial.ttf"))
+    {
+        cout << "Failed to load font" << endl;
+        return -1;
+    }
+    Text scoreText(font, "Score: 0", 24);
+    scoreText.setPosition({ 10.f, 10.f });
+    Text livesText(font, "Lives: 3", 24);
+    livesText.setPosition({ 10.f, 40.f });
     // Game Menu 
     Texture playbtn, levelbtn, scorebtn, exitbtn, bgTexture;
     if (!playbtn.loadFromFile("images/play.jpg")) {
@@ -147,8 +115,7 @@ int main() {
         cout << "Failed to load background texture" << endl;
         return -1;
     }
-    bgTexture.generateMipmap();
-    bgTexture.setSmooth(true);
+
 
     RectangleShape background({ 600.f, 700.f });
     background.setPosition({ 0.f, 0.f });
@@ -265,6 +232,7 @@ int main() {
                         if (brickBounds.findIntersection(ballBounds))
                         {
                             bricks[rows][cols]--;
+							scoreText.setString("Score: " + to_string(scoretxt += 10));
                             directcalc(brickBounds, ballBounds, velocity, speed, 1); // brick = 1
                         }
 
@@ -272,6 +240,7 @@ int main() {
                         {
                             window.draw(brick);
                         }
+
                     }
                 }
             }
@@ -299,6 +268,19 @@ int main() {
                 velocity.x = -abs(velocity.x);
             if (ballBounds.position.y <= 0.f)
                 velocity.y = abs(velocity.y);
+            if (ballBounds.position.y >= 700.f)
+            {
+                if (lives>0)
+                {
+                    lives--;
+					livesText.setString("Lives: " + to_string(lives));
+                    ball.setPosition({ 300.f, 400.f });
+                }
+                else
+                {
+					window.close();
+                }
+            }
 
             if (paddleBounds.findIntersection(ballBounds))
             {
@@ -307,6 +289,8 @@ int main() {
 
             window.draw(paddle);
             window.draw(ball);
+            window.draw(scoreText);
+            window.draw(livesText);
             break;
         }
         default:
