@@ -32,7 +32,6 @@ void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& veloci
     }
 }
 
-
 void scoresave(int playerscr) {
     int score = 0;
     ifstream scorefile("scores/scores.txt");
@@ -101,7 +100,7 @@ struct LevelBtn {
 int main() {
     int r = 0, c = 0;
     vector<vector<int>> bricks;
-    int scoretxt = 0, savedgame = 0,lives = 3,option = 0,level = 1,ballstate = 0;
+    int scoretxt = 0,lives = 3,option = 0,level = 1,ballstate = 0;
     levelload(level, r, c, bricks);
     float paddleX = 250.f, ballX = 300.f, ballY = 400.f;
     RectangleShape paddle({ 100.f, 14.f });
@@ -272,7 +271,7 @@ int main() {
 
                         // Reset ball
                         ball.setPosition({ 300.f, 400.f });
-                        velocity = { 0.f, speed };
+                        velocity = { 0.f, 0.f };
 
                         // Reset paddle
                         paddleX = 250.f;
@@ -291,13 +290,18 @@ int main() {
                     }
                     else if (option == 0 && continuebtn.getGlobalBounds().contains(mousePos))
                     {
-                        if (savedgame    )
+                        if (loadsavegame(lives, level, scoretxt, r, c, bricks))
                         {
-                            loadsavegame(lives, level, scoretxt, r, c, bricks);
+                            scoreText.setString("Score: " + to_string(scoretxt));
+                            livesText.setString("Lives: " + to_string(lives));
+                            ball.setPosition({ 300.f, 400.f });
+                            velocity = { 0.f, 0.f };
+                            ballstate = 0;
                             option = 1;
                         }
-                        else {
-							cout << "Not able to load saved game data. Please start a new game." << endl;
+                        else
+                        {
+                            cout << "No saved game found. Please start a new game." << endl;
                         }
 
                     }
@@ -338,8 +342,9 @@ int main() {
             sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
             paddleX = paddleX - 8;
             paddle.setPosition({ (float)paddleX, 650.f });
-            if (!(velocity.x && velocity.y))
+            if (!ballstate)
             {
+                ballstate = 1;
                 velocity = { 0.f, speed };
             }
 
@@ -398,9 +403,9 @@ int main() {
                     }
                     velocity = { 0.f, 0.f };
                     option = 0;
+                    ballstate = 0;
                 }
                 savefile.close();
-                savedgame = 1;
             }
             else if (option == 2 || option == 3)
             {
@@ -539,7 +544,6 @@ int main() {
             {
                 cout << "Failed to load level " << level << "." << endl;
             }
-
             break;
         }
         default:
