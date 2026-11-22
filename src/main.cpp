@@ -9,7 +9,7 @@
 
 using namespace sf;
 using namespace std;
-int option = 0;
+
 void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& velocity, float speed, int brick = 0) {
     float objectCenter = objectBounds.position.x + objectBounds.size.x / 2.f;
     float ballCenter = ballBounds.position.x + ballBounds.size.x / 2.f;
@@ -75,7 +75,7 @@ bool levelload(int lvl, int& r, int& c, vector<vector<int>>& bricks) {
     }
     return true;
 }
-bool loadsavegame(int lives, int& level, int& scoretxt, int& r, int& c, vector<vector<int>>& bricks) {
+bool loadsavegame(int &lives, int& level, int& scoretxt, int& r, int& c, vector<vector<int>>& bricks) {
 
 	ifstream savefile("data.txt");
 	if (!savefile.is_open()) {
@@ -99,7 +99,6 @@ struct LevelBtn {
     string levelPath;
 };
 int main() {
-
     int r = 0, c = 0;
     vector<vector<int>> bricks;
     int scoretxt = 0;
@@ -250,47 +249,13 @@ int main() {
         lvlBtns[i].shape.setTexture(&lvlBtns[i].texture);
         lvlBtns[i].levelPath = "Levels/level" + to_string(i + 1) + ".txt";
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Main game loop
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
                 window.close();
+
             if (const auto* mousePressed = event->getIf<sf::Event::MouseButtonPressed>())
             {
                 if (mousePressed->button == Mouse::Button::Left)
@@ -336,9 +301,16 @@ int main() {
                     {
                         option = 3; // Open levels screen
                     }
-                    else if (option == 0 && exit.getGlobalBounds().contains(mousePos))
+                    else if ((option == 0 || option == 2) && exit.getGlobalBounds().contains(mousePos))
                     {
-                        window.close();
+                        if (option == 2)
+                        {
+                            option = 0;
+                        }
+                        else {
+                            window.close();
+                        }
+                        
                     }
                     else if (option == 3)
                     {
@@ -372,13 +344,15 @@ int main() {
             sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
             paddleX = paddleX + 8;
             paddle.setPosition({ (float)paddleX, 650.f });
-            if (!(velocity.x && velocity.y))
+            if (velocity.x == 0 && velocity.y == 0)
             {
                 velocity = { 0.f, speed };
             }
 
         }
-
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape) && option != 0 && option != 1) {
+            option = 0;
+        }
         window.clear();
         switch (option) {
         case 0:
@@ -543,6 +517,7 @@ int main() {
 
             window.draw(scoresTitle);
             window.draw(plyrscr);
+            window.draw(exit);
             break;
         }
         case 3:
