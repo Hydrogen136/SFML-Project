@@ -91,7 +91,7 @@ bool loadsavegame(int &lives, int& level, int& scoretxt, int& r, int& c, vector<
 			savefile >> bricks[rows][cols];
 		}
 	}
-	return true;
+    return true;
 }
 struct LevelBtn {
     RectangleShape shape;
@@ -101,10 +101,7 @@ struct LevelBtn {
 int main() {
     int r = 0, c = 0;
     vector<vector<int>> bricks;
-    int scoretxt = 0;
-    int lives = 3;
-    int option = 0;
-    int level = 1;
+    int scoretxt = 0, savedgame = 0,lives = 3,option = 0,level = 1,ballstate = 0;
     levelload(level, r, c, bricks);
     float paddleX = 250.f, ballX = 300.f, ballY = 400.f;
     RectangleShape paddle({ 100.f, 14.f });
@@ -294,8 +291,15 @@ int main() {
                     }
                     else if (option == 0 && continuebtn.getGlobalBounds().contains(mousePos))
                     {
-						loadsavegame(lives, level, scoretxt, r, c, bricks);
-						option = 1;
+                        if (savedgame    )
+                        {
+                            loadsavegame(lives, level, scoretxt, r, c, bricks);
+                            option = 1;
+                        }
+                        else {
+							cout << "Not able to load saved game data. Please start a new game." << endl;
+                        }
+
                     }
                     else if (option == 0 && levels.getGlobalBounds().contains(mousePos))
                     {
@@ -344,8 +348,9 @@ int main() {
             sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
             paddleX = paddleX + 8;
             paddle.setPosition({ (float)paddleX, 650.f });
-            if (velocity.x == 0 && velocity.y == 0)
+            if (!ballstate)
             {
+                ballstate = 1;
                 velocity = { 0.f, speed };
             }
 
@@ -395,6 +400,7 @@ int main() {
                     option = 0;
                 }
                 savefile.close();
+                savedgame = 1;
             }
             else if (option == 2 || option == 3)
             {
@@ -470,6 +476,7 @@ int main() {
                     velocity = { 0.f, 0.f };
                     paddleX = 250.f;
                     paddle.setPosition({ paddleX, 650.f });
+                    ballstate = 0;
                 }
                 else
                 {
@@ -479,6 +486,7 @@ int main() {
                     scoretxt = 0;
                     lives = 3;
                     levelload(level, r, c, bricks);
+                    ballstate = 0;
 
                 }
             }
