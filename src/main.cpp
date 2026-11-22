@@ -1,4 +1,3 @@
-
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <fstream>
@@ -36,13 +35,13 @@ void directcalc(FloatRect& objectBounds, FloatRect& ballBounds, Vector2f& veloci
 
 void scoresave(int playerscr) {
     int score = 0;
-	ifstream scorefile("scores/scores.txt");
-	scorefile >> score;
-	cout << "Current high score: " << score << endl;
-	scorefile.close();
-    if (score<playerscr)
+    ifstream scorefile("scores/scores.txt");
+    scorefile >> score;
+    cout << "Current high score: " << score << endl;
+    scorefile.close();
+    if (score < playerscr)
     {
-		cout << "New high score: " << playerscr << endl;
+        cout << "New high score: " << playerscr << endl;
         ofstream output("scores/scores.txt");
         if (!output.is_open()) {
             cout << "Failed to open scores file" << endl;
@@ -53,9 +52,9 @@ void scoresave(int playerscr) {
     }
 
 }
-bool levelload(int lvl,int &r, int &c, vector<vector<int>>& bricks) {
+bool levelload(int lvl, int& r, int& c, vector<vector<int>>& bricks) {
 
-	string levelFile = "Levels/level" + to_string(lvl) + ".txt";
+    string levelFile = "Levels/level" + to_string(lvl) + ".txt";
     ifstream bricksdata(levelFile);
 
     if (!bricksdata.is_open()) {
@@ -74,6 +73,24 @@ bool levelload(int lvl,int &r, int &c, vector<vector<int>>& bricks) {
             bricksdata >> bricks[rows][cols];
         }
     }
+    return true;
+}
+bool loadsavegame(int lives, int& level, int& scoretxt, int& r, int& c, vector<vector<int>>& bricks) {
+
+	ifstream savefile("data.txt");
+	if (!savefile.is_open()) {
+		cout << "Failed to load saved game data" << endl;
+		return false;
+	}
+	savefile >> level >> scoretxt >> lives >> r >> c;
+	bricks.assign(r, vector<int>(c));
+	for (int rows = 0; rows < r; rows++)
+	{
+		for (int cols = 0; cols < c; cols++)
+		{
+			savefile >> bricks[rows][cols];
+		}
+	}
 	return true;
 }
 struct LevelBtn {
@@ -83,13 +100,13 @@ struct LevelBtn {
 };
 int main() {
 
-    int r=0, c=0;
+    int r = 0, c = 0;
     vector<vector<int>> bricks;
     int scoretxt = 0;
     int lives = 3;
     int option = 0;
     int level = 1;
-	levelload(level, r, c, bricks);
+    levelload(level, r, c, bricks);
     float paddleX = 250.f, ballX = 300.f, ballY = 400.f;
     RectangleShape paddle({ 100.f, 14.f });
     CircleShape ball(6.f);
@@ -129,14 +146,14 @@ int main() {
 
     Sound gameOverSound(gameOverBuffer);
 
-	// for paddle sound
+    // for paddle sound
     SoundBuffer paddleBuffer;
     if (!paddleBuffer.loadFromFile("Sounds/paddle.wav"))
     {
         cout << "Paddle sound failed to load!" << endl;
     }
     Sound paddleSound(paddleBuffer);
-	
+
     // for life lost sound
     SoundBuffer lifeLostBuffer;
     if (!lifeLostBuffer.loadFromFile("Sounds/life lost.mp3"))
@@ -144,7 +161,7 @@ int main() {
         cout << "Life lost sound failed to load!" << endl;
     }
     Sound lifeLostSound(lifeLostBuffer);
-    
+
     // for main menu music
     SoundBuffer menuBuffer;
     if (!menuBuffer.loadFromFile("Sounds/Main menu.mp3"))
@@ -168,7 +185,7 @@ int main() {
     Text livesText(font, "Lives: 3", 24);
     livesText.setPosition({ 10.f, 40.f });
     // Game Menu 
-    Texture playbtn, levelbtn, scorebtn, exitbtn, bgTexture, logoTexture;
+    Texture playbtn, levelbtn, scorebtn, exitbtn, bgTexture, logoTexture, conbtn;
     if (!playbtn.loadFromFile("images/play.jpg")) {
         cout << "Failed to load play button texture" << endl;
         return -1;
@@ -194,7 +211,12 @@ int main() {
         cout << "Failed to load logo" << endl;
         return -1;
     }
-    
+    if (!conbtn.loadFromFile("images/continue.jpg"))
+    {
+        cout << "Failed to load continue button texture" << endl;
+        return -1;
+    }
+
     Sprite logo(logoTexture);
 
     logo.setScale({ 0.30f, 0.30f });
@@ -203,14 +225,16 @@ int main() {
     RectangleShape background({ 600.f, 700.f });
     background.setPosition({ 0.f, 0.f });
     background.setTexture(&bgTexture);
-    RectangleShape play({ 200.f, 50.f }), scores({ 200.f, 50.f }), levels({ 200.f, 50.f }), exit({ 200.f, 50.f });
+    RectangleShape play({ 200.f, 50.f }), continuebtn({ 200.f, 50.f }), scores({ 200.f, 50.f }), levels({ 200.f, 50.f }), exit({ 200.f, 50.f });
     play.setPosition({ 200.f, 300.f });
     play.setTexture(&playbtn);
-    scores.setPosition({ 200.f, 400.f });
+    continuebtn.setPosition({ 200.f, 360.f });
+    continuebtn.setTexture(&conbtn);
+    scores.setPosition({ 200.f, 420.f });
     scores.setTexture(&scorebtn);
-    levels.setPosition({ 200.f, 500.f });
+    levels.setPosition({ 200.f, 480.f });
     levels.setTexture(&levelbtn);
-    exit.setPosition({ 200.f, 600.f });
+    exit.setPosition({ 200.f, 540.f });
     exit.setTexture(&exitbtn);
 
     LevelBtn lvlBtns[5];
@@ -274,42 +298,47 @@ int main() {
                     Vector2f mousePos = window.mapPixelToCoords(mousePressed->position);
                     if (option == 0 && play.getGlobalBounds().contains(mousePos))
                     {
-                        
-                        
-                            // Reset score
-                            scoretxt = 0;
-                            scoreText.setString("Score: 0");
 
-                            // Reset lives
-                            lives = 3;
-                            livesText.setString("Lives: 3");
 
-                            // Reset ball
-                            ball.setPosition({ 300.f, 400.f });
-                            velocity = { 0.f, speed };
+                        // Reset score
+                        scoretxt = 0;
+                        scoreText.setString("Score: 0");
 
-                            // Reset paddle
-                            paddleX = 250.f;
-                            paddle.setPosition({ paddleX, 650.f });
+                        // Reset lives
+                        lives = 3;
+                        livesText.setString("Lives: 3");
 
-                            // Reload the selected level
-                            levelload(level, r, c, bricks);
+                        // Reset ball
+                        ball.setPosition({ 300.f, 400.f });
+                        velocity = { 0.f, speed };
 
-                            option = 1;
-                        
-                        
+                        // Reset paddle
+                        paddleX = 250.f;
+                        paddle.setPosition({ paddleX, 650.f });
+
+                        // Reload the selected level
+                        levelload(level, r, c, bricks);
+
+                        option = 1;
+
+
                     }
                     else if (option == 0 && scores.getGlobalBounds().contains(mousePos))
                     {
                         option = 2;
                     }
+                    else if (option == 0 && continuebtn.getGlobalBounds().contains(mousePos))
+                    {
+						loadsavegame(lives, level, scoretxt, r, c, bricks);
+						option = 1;
+                    }
                     else if (option == 0 && levels.getGlobalBounds().contains(mousePos))
                     {
                         option = 3; // Open levels screen
                     }
-                    else if (option == 0 && levels.getGlobalBounds().contains(mousePos))
+                    else if (option == 0 && exit.getGlobalBounds().contains(mousePos))
                     {
-                        option = 4; // Open levels screen
+                        window.close();
                     }
                     else if (option == 3)
                     {
@@ -328,25 +357,24 @@ int main() {
                     }
                 }
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-                paddleX = paddleX - 8;
-                paddle.setPosition({ (float)paddleX, 650.f });
-                if  (!(velocity.x && velocity.y))
-                {
-                    velocity = { 0.f, speed };
-                }
-				
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
+            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+            paddleX = paddleX - 8;
+            paddle.setPosition({ (float)paddleX, 650.f });
+            if (!(velocity.x && velocity.y))
+            {
+                velocity = { 0.f, speed };
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-                paddleX = paddleX + 8;
-                paddle.setPosition({ (float)paddleX, 650.f });
-                if (!(velocity.x && velocity.y))
-                {
-                    velocity = { 0.f, speed };
-                }
-				
+
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
+            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+            paddleX = paddleX + 8;
+            paddle.setPosition({ (float)paddleX, 650.f });
+            if (!(velocity.x && velocity.y))
+            {
+                velocity = { 0.f, speed };
             }
 
         }
@@ -355,8 +383,8 @@ int main() {
         switch (option) {
         case 0:
         {
-        
-        
+
+
             if (menuSound.getStatus() != Sound::Status::Playing)
             {
                 menuSound.play();
@@ -368,13 +396,36 @@ int main() {
             window.draw(exit);
             window.draw(scores);
             window.draw(play);
+            window.draw(continuebtn);
             break;
         }
-        
-        case 1: {
-			window.draw(background);
-            menuSound.stop();
 
+        case 1: {
+            window.draw(background);
+            menuSound.stop();
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
+            {
+                ofstream savefile("data.txt");
+                if (savefile.is_open())
+                {
+                    savefile << level << " " << scoretxt << " " << lives << " " << r << " " << c << endl;
+                    for (int i = 0; i < r; i++)
+                    {
+                        for (int j = 0; j < c; j++)
+                        {
+                            savefile << bricks[i][j] << " ";
+                        }
+                        savefile << endl;
+                    }
+                    velocity = { 0.f, 0.f };
+                    option = 0;
+                }
+                savefile.close();
+            }
+            else if (option == 2 || option == 3)
+            {
+                option = 0;
+            }
             for (int rows = 0; rows < r; rows++)
             {
                 for (int cols = 0; cols < c; cols++)
@@ -392,7 +443,7 @@ int main() {
                         if (brickBounds.findIntersection(ballBounds))
                         {
                             bricks[rows][cols]--;
-							scoreText.setString("Score: " + to_string(scoretxt += 10));
+                            scoreText.setString("Score: " + to_string(scoretxt += 10));
                             if (brickSound.getStatus() != Sound::Status::Playing)
                             {
                                 brickSound.play();
@@ -434,27 +485,27 @@ int main() {
                 velocity.y = abs(velocity.y);
             if (ballBounds.position.y >= 700.f)
             {
-                if (lives>1)
+                if (lives > 1)
                 {
                     lifeLostSound.stop();
                     lifeLostSound.play();
 
                     lives--;
-					livesText.setString("Lives: " + to_string(lives));
+                    livesText.setString("Lives: " + to_string(lives));
                     ball.setPosition({ 300.f, 400.f });
-					velocity = { 0.f, 0.f };
+                    velocity = { 0.f, 0.f };
                     paddleX = 250.f;
-					paddle.setPosition({ paddleX, 650.f });
+                    paddle.setPosition({ paddleX, 650.f });
                 }
                 else
                 {
-                gameOverSound.play();
-                scoresave(scoretxt);
-                option = 0;
-                scoretxt = 0;
-                lives = 3;
-                levelload(level, r, c, bricks);
-            
+                    gameOverSound.play();
+                    scoresave(scoretxt);
+                    option = 0;
+                    scoretxt = 0;
+                    lives = 3;
+                    levelload(level, r, c, bricks);
+
                 }
             }
 
@@ -473,8 +524,8 @@ int main() {
             window.draw(livesText);
             break;
         }
-		case 2:
-		{
+        case 2:
+        {
             int score = 0;
             ifstream scoresFile("scores/scores.txt");
             if (scoresFile.is_open()) {
@@ -493,32 +544,26 @@ int main() {
             window.draw(scoresTitle);
             window.draw(plyrscr);
             break;
-		}
-		case 3:
-		{
+        }
+        case 3:
+        {
             window.draw(background);
             for (int i = 0; i < 5; i++)
             {
                 window.draw(lvlBtns[i].shape);
             }
-			if(!levelload(level, r, c, bricks))
-			{
-				cout << "Failed to load level " << level << "." << endl;
-			}
-            
+            if (!levelload(level, r, c, bricks))
+            {
+                cout << "Failed to load level " << level << "." << endl;
+            }
+
             break;
-		}
-        case 4:
-		{
-			window.close();
-			break;
-		}
+        }
         default:
         {
             break;
         }
         }
-
         window.display();
     }
 }
