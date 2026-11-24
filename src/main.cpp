@@ -74,6 +74,35 @@ bool levelload(int lvl, int& r, int& c, vector<vector<int>>& bricks) {
     }
     return true;
 }
+void resetter(int &scoretxt, int &lives, int level, int r, int c, vector<vector<int>>& bricks, float &paddleX,Text &scrtxt,Text &livesText,int &ballstate,RectangleShape &paddle) {
+	ballstate = 0;
+    // Reset score
+    scoretxt = 0;
+    // Reset lives
+    lives = 3;
+    // Reset paddle
+    paddleX = 250.f;
+    //setting strings 
+    scrtxt.setString("Score: " + to_string(scoretxt));
+    livesText.setString("Lives: " + to_string(lives));
+	paddle.setPosition({ paddleX, 650.f });
+    // Reload the selected level
+    levelload(level, r, c, bricks);
+
+}
+bool wincondition(int r, int c, vector<vector<int>>& bricks) {
+	for (int rows = 0; rows < r; rows++)
+	{
+		for (int cols = 0; cols < c; cols++)
+		{
+			if (bricks[rows][cols] > 0)
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
 bool loadsavegame(int &lives, int& level, int& scoretxt, int& r, int& c, vector<vector<int>>& bricks) {
 
 	ifstream savefile("data.txt");
@@ -119,8 +148,19 @@ int main() {
 
     RectangleShape brick({ BRICK_W - 2, BRICK_H - 2 });
 
+    // Main window
     RenderWindow window(VideoMode({ 600, 700 }), "Block buster");
     window.setFramerateLimit(60);
+
+
+
+
+
+
+
+
+
+    //Game sounds
     // for brick sound
     SoundBuffer brickBuffer;
 
@@ -179,8 +219,25 @@ int main() {
     scoreText.setPosition({ 10.f, 10.f });
     Text livesText(font, "Lives: 3", 24);
     livesText.setPosition({ 10.f, 40.f });
+
+
+
+
+
+
+
     // Game Menu 
-    Texture playbtn, levelbtn, scorebtn, exitbtn, bgTexture, logoTexture, conbtn;
+    Texture playbtn, levelbtn, scorebtn, exitbtn, bgTexture, logoTexture, conbtn,wintexture,retrytexture,nxtlvltexture;
+    if (!nxtlvltexture.loadFromFile("images/nxtlvlbtn.jpg"))
+    {
+        cout << "Failed to load play button texture" << endl;
+        return -1;
+    }    
+    if (!retrytexture.loadFromFile("images/retrybtn.jpg"))
+    {
+        cout << "Failed to load play button texture" << endl;
+        return -1;
+    }
     if (!playbtn.loadFromFile("images/play.jpg")) {
         cout << "Failed to load play button texture" << endl;
         return -1;
@@ -220,7 +277,7 @@ int main() {
     RectangleShape background({ 600.f, 700.f });
     background.setPosition({ 0.f, 0.f });
     background.setTexture(&bgTexture);
-    RectangleShape play({ 200.f, 50.f }), continuebtn({ 200.f, 50.f }), scores({ 200.f, 50.f }), levels({ 200.f, 50.f }), exit({ 200.f, 50.f });
+    RectangleShape play({ 200.f, 50.f }), continuebtn({ 200.f, 50.f }), scores({ 200.f, 50.f }), levels({ 200.f, 50.f }), exit({ 200.f, 50.f }), retrybtn({ 175.f, 60.f }), nxtlvlbtn({ 175.f, 60.f });
     play.setPosition({ 200.f, 300.f });
     play.setTexture(&playbtn);
     continuebtn.setPosition({ 200.f, 360.f });
@@ -231,6 +288,32 @@ int main() {
     levels.setTexture(&levelbtn);
     exit.setPosition({ 200.f, 540.f });
     exit.setTexture(&exitbtn);
+	retrybtn.setPosition({ 220.f, 380.f });
+	retrybtn.setTexture(&retrytexture);
+    nxtlvlbtn.setPosition({ 220.f, 440.f });
+    nxtlvlbtn.setTexture(&nxtlvltexture);
+    if (!wintexture.loadFromFile("images/windialog.jpg")) {
+        cout << "Failed to load win texture" << endl;
+        return -1;
+    }
+    wintexture.setSmooth(true);
+    (void)wintexture.generateMipmap();
+
+    Sprite winSprite(wintexture);
+
+    // Scale uniformly using the height so the aspect ratio never stretches
+    Vector2u texSize = wintexture.getSize();
+    float targetHeight = 560.f; // Fits as a centered dialog inside 600x700
+    float scale = targetHeight / static_cast<float>(texSize.y);
+    winSprite.setScale({ scale, scale });
+
+    // Round to whole pixels so OpenGL doesn't blur edges across sub-pixels
+    float posX = std::round((600.f - texSize.x * scale) / 2.f);
+    float posY = std::round((700.f - texSize.y * scale) / 2.f);
+    winSprite.setPosition({ posX, posY });
+	Text winscr(font, "000", 36);
+	winscr.setPosition({ 275.f, 325.f });
+
 
     LevelBtn lvlBtns[5];
 
@@ -245,6 +328,14 @@ int main() {
         lvlBtns[i].shape.setTexture(&lvlBtns[i].texture);
         lvlBtns[i].levelPath = "Levels/level" + to_string(i + 1) + ".txt";
     }
+
+
+
+
+
+
+
+
     // Main game loop
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent())
@@ -259,26 +350,9 @@ int main() {
                     Vector2f mousePos = window.mapPixelToCoords(mousePressed->position);
                     if (option == 0 && play.getGlobalBounds().contains(mousePos))
                     {
-
-
-                        // Reset score
-                        scoretxt = 0;
-                        scoreText.setString("Score: 0");
-
-                        // Reset lives
-                        lives = 3;
-                        livesText.setString("Lives: 3");
-
-                        // Reset ball
+						resetter(scoretxt, lives, level, r, c, bricks, paddleX,scoreText,livesText,ballstate,paddle);
                         ball.setPosition({ 300.f, 400.f });
                         velocity = { 0.f, 0.f };
-
-                        // Reset paddle
-                        paddleX = 250.f;
-                        paddle.setPosition({ paddleX, 650.f });
-
-                        // Reload the selected level
-                        levelload(level, r, c, bricks);
 
                         option = 1;
 
@@ -287,6 +361,26 @@ int main() {
                     else if (option == 0 && scores.getGlobalBounds().contains(mousePos))
                     {
                         option = 2;
+                    }
+                    else if (option == 4 && retrybtn.getGlobalBounds().contains(mousePos))
+                    {
+
+                        option = 1;
+						resetter(scoretxt, lives, level, r, c, bricks, paddleX, scoreText, livesText,ballstate,paddle);
+                    }
+                    else if (option == 4 && nxtlvlbtn.getGlobalBounds().contains(mousePos))
+                    {
+                        if (level<5)
+                        {
+                            level++;
+                        }
+                        else {
+                            level = 1;
+                        }
+                        resetter(scoretxt, lives, level, r, c, bricks, paddleX,scoreText,livesText,ballstate,paddle);
+                        ball.setPosition({ 300.f, 400.f });
+                        velocity = { 0.f, 0.f };
+						option = 1;
                     }
                     else if (option == 0 && continuebtn.getGlobalBounds().contains(mousePos))
                     {
@@ -338,8 +432,8 @@ int main() {
                 }
             }
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
-            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+        if (option == 1 && (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
+            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))) {
             paddleX = paddleX - 8;
             paddle.setPosition({ (float)paddleX, 650.f });
             if (!ballstate)
@@ -349,8 +443,8 @@ int main() {
             }
 
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
-            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+        if (option == 1 && (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
+            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))) {
             paddleX = paddleX + 8;
             paddle.setPosition({ (float)paddleX, 650.f });
             if (!ballstate)
@@ -381,6 +475,7 @@ int main() {
             window.draw(scores);
             window.draw(play);
             window.draw(continuebtn);
+      
             break;
         }
 
@@ -504,7 +599,10 @@ int main() {
                 }
                 directcalc(paddleBounds, ballBounds, velocity, speed);
             }
-
+            if (wincondition(r, c, bricks))
+            {
+                option = 4;
+            }
             window.draw(paddle);
             window.draw(ball);
             window.draw(scoreText);
@@ -544,6 +642,17 @@ int main() {
             {
                 cout << "Failed to load level " << level << "." << endl;
             }
+            break;
+        }
+        case 4:
+        {
+			scoresave(scoretxt);
+            window.draw(background);
+            window.draw(winSprite);
+			winscr.setString("" + to_string(scoretxt));
+            window.draw(winscr);
+			window.draw(retrybtn);
+			window.draw(nxtlvlbtn);
             break;
         }
         default:
