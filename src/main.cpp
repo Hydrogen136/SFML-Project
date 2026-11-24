@@ -74,7 +74,7 @@ bool levelload(int lvl, int& r, int& c, vector<vector<int>>& bricks) {
     }
     return true;
 }
-void resetter(int &scoretxt, int &lives, int level, int r, int c, vector<vector<int>>& bricks, float &paddleX,Text &scrtxt,Text &livesText,int &ballstate,RectangleShape &paddle) {
+void resetter(int &scoretxt, int &lives, int level, int r, int c, vector<vector<int>>& bricks, float &paddleX,Text &scrtxt,Text &livesText,int &ballstate,RectangleShape &paddle,CircleShape &ball) {
 	ballstate = 0;
     // Reset score
     scoretxt = 0;
@@ -85,6 +85,8 @@ void resetter(int &scoretxt, int &lives, int level, int r, int c, vector<vector<
     //setting strings 
     scrtxt.setString("Score: " + to_string(scoretxt));
     livesText.setString("Lives: " + to_string(lives));
+	//reseting ball and paddle positions
+	ball.setPosition({ 300.f, 400.f });             
 	paddle.setPosition({ paddleX, 650.f });
     // Reload the selected level
     levelload(level, r, c, bricks);
@@ -350,7 +352,7 @@ int main() {
                     Vector2f mousePos = window.mapPixelToCoords(mousePressed->position);
                     if (option == 0 && play.getGlobalBounds().contains(mousePos))
                     {
-						resetter(scoretxt, lives, level, r, c, bricks, paddleX,scoreText,livesText,ballstate,paddle);
+						resetter(scoretxt, lives, level, r, c, bricks, paddleX,scoreText,livesText,ballstate,paddle,ball);
                         ball.setPosition({ 300.f, 400.f });
                         velocity = { 0.f, 0.f };
 
@@ -366,7 +368,7 @@ int main() {
                     {
 
                         option = 1;
-						resetter(scoretxt, lives, level, r, c, bricks, paddleX, scoreText, livesText,ballstate,paddle);
+						resetter(scoretxt, lives, level, r, c, bricks, paddleX, scoreText, livesText,ballstate,paddle,ball);
                     }
                     else if (option == 4 && nxtlvlbtn.getGlobalBounds().contains(mousePos))
                     {
@@ -377,7 +379,7 @@ int main() {
                         else {
                             level = 1;
                         }
-                        resetter(scoretxt, lives, level, r, c, bricks, paddleX,scoreText,livesText,ballstate,paddle);
+                        resetter(scoretxt, lives, level, r, c, bricks, paddleX,scoreText,livesText,ballstate,paddle,ball);
                         ball.setPosition({ 300.f, 400.f });
                         velocity = { 0.f, 0.f };
 						option = 1;
